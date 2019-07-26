@@ -1,8 +1,103 @@
 <html>
-<head>
-<title>Test Page</title>
-</head>
-<body>
-<h1>This is a test</h1>
-</body>
+    <head>
+        <title>Interactive DAP Configuration</title>
+        <link rel="stylesheet" href="css/grid/simple-grid.css" />
+        <link rel="stylesheet" href="css/styles.css" media="screen">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h1>Required Values</h1>
+                    <p>The following table contains values and descriptions that will automatically update the
+                    config files and commands below to assist in the installation of DAP.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <td>Field Name</td>
+                                <td>Value</td>
+                                <td>Description</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><label for="conjur-version">DAP Version</label></td>
+                                <td><input type="text" id="conjur-version" name="conjur-version" value="10.10" /></td>
+                                <td>Version of DAP</td>
+                            </tr>
+                            <tr>
+                                <td><label for="docker-data-dir">Docker Data Dir</label></td>
+                                <td><input type="text" id="docker-data-dir" name="docker-data-dir" value="/var/lib/docker" /></td>
+                                <td>Location on the host where docker data will be stored.</td>
+                            </tr>
+                            <tr>
+                                <td><label for="conjur-backup-dir">Conjur Backup Dir</label></td>
+                                <td><input type="text" id="conjur-backup-dir" name="conjur-backup-dir" value="/opt/conjur/backup" /></td>
+                                <td>Location on the host where conjur backup data will be stored.</td>
+                            </tr>
+                            <tr>
+                                <td><label for="conjur-logs-dir">Conjur Logs Dir</label></td>
+                                <td><input type="text" id="conjur-logs-dir" name="conjur-logs-dir" value="/var/log/conjur" /></td>
+                                <td>Location on the host where conjur audit logs will be stored.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+        <h1>Install Docker CE (RHEL/CentOS)</h1>
+        <h2>Initial Install and Configuration</h2>
+        <p><a href="https://docs.docker.com/install/linux/docker-ce/centos/">CentOS Instructions</a></p>
+        <p><strong>BEFORE</strong> starting the docker daemon, create the /etc/docker/daemon.json file:
+        <ul>
+            <li>If you are installing to an apps drive, add the data-root configuration value.</li>
+            <li>Add the log-driver configuration value, and set it to journald</li>
+        </ul>
+<pre><code>/etc/docker/daemon.json:
+{
+  "data-root": "/path/to/docker/data",
+  "log-driver": "journald"
+}</code></pre>
+        <ul>
+            <li>Enable the docker engine</li>
+            <li>Start the docker engine</li>
+            <li>OPTIONAL: Add the non-privileged user(s) to the docker group</li>
+            <li>Logout / login for group changes to take effect</li>
+        </ul>
+<pre><code>systemctl enable docker && \
+systemctl start docker && \
+usermod -a -G docker &lt;non-root-user&gt;</code></pre>
+
+
+        <h1>Load & Run Appliance Containers</h1>
+
+        <h2>Load the Appliance and CLI Image</h2>
+<pre><code id="code-load-images">docker load -i conjur-appliance-10.10.tar.gz
+docker load -i cli5.tar.gz</code></pre>
+
+        <h2>Start the Appliance Container</h2>
+
+        <h3>Master</h3>
+<pre><code>docker run --name conjur -d --restart=always \
+  --security-opt seccomp:unconfined \
+  -v /opt/conjur/backup:/opt/conjur/backup \
+  -v /var/log/conjur:/var/log/conjur \
+  -p "443:443" -p "1999:1999" -p "5432:5432" \
+  registry.tld/conjur-appliance:10.10</code></pre>
+
+        <h3>Follower</h3>
+<pre><code>docker run --name conjur -d --restart=always \
+  --security-opt seccomp:unconfined \
+  -v /opt/conjur/backup:/opt/conjur/backup \
+  -v /var/log/conjur:/var/log/conjur \
+  -p "443:443" \
+  registry.tld/conjur-appliance:10.10</code></pre>
+        </div>
+                </div>
+            </div>
+
+
+
+    </body>
 </html>
